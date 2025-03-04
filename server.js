@@ -1,17 +1,28 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const socketIO = require('socket.io');
 
+// 创建Express应用
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-app.use(express.static('public'));
+// 配置静态文件目录
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 主页路由
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // 存储玩家信息
 const rooms = {};
 
+// 处理socket连接
 io.on('connection', (socket) => {
+  console.log('有新用户连接: ' + socket.id);
+  
   let playerInfo = {
     id: null,
     room: null,
@@ -76,10 +87,14 @@ io.on('connection', (socket) => {
       
       console.log(`玩家 ${playerInfo.id} 离开房间 ${playerInfo.room}`);
     }
+    console.log('用户断开连接: ' + socket.id);
   });
 });
 
+// 将端口设置为环境变量提供的端口或者默认值
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`服务器运行在端口 ${PORT}`);
+
+// 修改服务器监听部分
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`服务器已在端口 ${PORT} 上启动`);
 }); 
